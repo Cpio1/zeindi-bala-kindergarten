@@ -10,7 +10,7 @@
  * «cloud.mail.ru/home/...» сілтемесін қолданбаңыз — ол жеке кабинетке апарады.
  * Бос немесе жария емес болса, «Құжаттарды қарау» батырмасы белсенді емес болады.
  */
-export const DOCUMENTS_URL: string = "";
+export const DOCUMENTS_URL: string = "https://cloud.mail.ru/public/nRPj/FooN3MgBq";
 
 const address = {
   city: "Алматы",
