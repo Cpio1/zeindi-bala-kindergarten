@@ -3,8 +3,12 @@ import { DOCUMENTS_URL } from "@/lib/site-config";
 import { Dots, Sparkle, Star } from "./Decorations";
 import Reveal from "./Reveal";
 
+/** Тек Облако Mail.ru жария сілтемесі (cloud.mail.ru/public/...) қабылданады, /home/ — жеке кабинет */
+const PUBLIC_CLOUD_URL = /^https:\/\/cloud\.mail\.ru\/public\/\S+$/;
+
 export default function Documents() {
-  const hasLink = DOCUMENTS_URL.trim().length > 0;
+  const url = DOCUMENTS_URL.trim();
+  const hasLink = PUBLIC_CLOUD_URL.test(url);
 
   return (
     <section id="documents" aria-labelledby="documents-title" className="relative bg-white py-12 sm:py-20">
@@ -39,21 +43,34 @@ export default function Documents() {
 
                 <div className="mt-7">
                   {hasLink ? (
-                    <a href={DOCUMENTS_URL} target="_blank" rel="noopener noreferrer" className="btn-sunny group">
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-sunny group px-7 py-3.5 text-base ring-4 ring-white/20 hover:shadow-lift sm:text-lg"
+                    >
+                      <FileText className="h-5 w-5 transition-transform group-hover:-rotate-6" aria-hidden />
                       Құжаттарды қарау
                       <ExternalLink className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
                       <span className="sr-only">(жаңа бетте ашылады)</span>
                     </a>
                   ) : (
-                    <button
-                      type="button"
-                      disabled
-                      aria-disabled="true"
-                      className="btn cursor-not-allowed border-2 border-dashed border-white/50 bg-white/10 text-white"
-                    >
-                      <Hourglass className="h-4 w-4" aria-hidden />
-                      Құжаттар жақында қосылады
-                    </button>
+                    <div className="flex flex-col items-center gap-2 md:items-start">
+                      <button
+                        type="button"
+                        disabled
+                        aria-disabled="true"
+                        aria-describedby="documents-pending"
+                        className="btn cursor-not-allowed border-2 border-dashed border-white/50 bg-white/10 px-7 py-3.5 text-base text-white sm:text-lg"
+                      >
+                        <FileText className="h-5 w-5" aria-hidden />
+                        Құжаттарды қарау
+                      </button>
+                      <span id="documents-pending" className="inline-flex items-center gap-1.5 text-sm text-white/75">
+                        <Hourglass className="h-3.5 w-3.5" aria-hidden />
+                        Сілтеме жақында қосылады
+                      </span>
+                    </div>
                   )}
                 </div>
               </div>
