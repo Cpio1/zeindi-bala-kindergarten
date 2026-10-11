@@ -1,13 +1,14 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const IMAGES_DIR = path.join(process.cwd(), "public", "images");
+const PUBLIC_DIR = path.join(process.cwd(), "public");
+const IMAGES_DIR = path.join(PUBLIC_DIR, "images");
 const IMAGE_EXT = /\.(jpe?g|png|webp)$/i;
 
 /** Басты экранға арналған файл: main-page.jpg / .jpeg / .png / .webp */
-const HERO_NAME = "main-page";
-/** «Біз туралы» бөліміне арналған қосымша файл (міндетті емес): about.jpg т.б. */
-const ABOUT_NAME = "about";
+const HERO_NAMES = ["main-page"];
+/** «Біз туралы» бөліміне арналған файл: main-page2 (немесе about) */
+const ABOUT_NAMES = ["main-page2", "about"];
 
 export type SiteImages = {
   hero: string | null;
@@ -19,29 +20,44 @@ function baseName(file: string) {
   return file.replace(IMAGE_EXT, "").toLowerCase();
 }
 
-/**
- * public/images папкасындағы суреттерді build кезінде оқиды.
- * main-page және about суреттері галереяға қосылмайды.
- */
-export function getSiteImages(): SiteImages {
-  let files: string[] = [];
+function listImages(dir: string): string[] {
   try {
-    files = fs
-      .readdirSync(IMAGES_DIR)
+    return fs
+      .readdirSync(dir)
       .filter((f) => !f.startsWith(".") && IMAGE_EXT.test(f))
       .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }));
   } catch {
-    return { hero: null, about: null, gallery: [] };
+    return [];
   }
+}
 
-  const toSrc = (f: string) => `/images/${encodeURIComponent(f)}`;
-  const hero = files.find((f) => baseName(f) === HERO_NAME);
-  const about = files.find((f) => baseName(f) === ABOUT_NAME);
-  const gallery = files.filter((f) => f !== hero && f !== about);
+/**
+ * Суреттерді build кезінде оқиды.
+ * main-page және main-page2 public/images немесе public папкасында болуы мүмкін;
+ * галерея тек public/images ішіндегі қалған суреттерден құралады.
+ */
+export function getSiteImages(): SiteImages {
+  const imageFiles = listImages(IMAGES_DIR);
+  const rootFiles = listImages(PUBLIC_DIR);
+
+  const find = (names: string[]) => {
+    for (const name of names) {
+      const inImages = imageFiles.find((f) => baseName(f) === name);
+      if (inImages) return { file: inImages, src: `/images/${encodeURIComponent(inImages)}` };
+      const inRoot = rootFiles.find((f) => baseName(f) === name);
+      if (inRoot) return { file: null, src: `/${encodeURIComponent(inRoot)}` };
+    }
+    return null;
+  };
+
+  const hero = find(HERO_NAMES);
+  const about = find(ABOUT_NAMES);
+  const reserved = new Set([...HERO_NAMES, ...ABOUT_NAMES]);
+  const gallery = imageFiles.filter((f) => !reserved.has(baseName(f)));
 
   return {
-    hero: hero ? toSrc(hero) : null,
-    about: about ? toSrc(about) : null,
-    gallery: gallery.map(toSrc),
+    hero: hero?.src ?? null,
+    about: about?.src ?? null,
+    gallery: gallery.map((f) => `/images/${encodeURIComponent(f)}`),
   };
 }
